@@ -3,30 +3,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Home, MapPin, Bed, Bath, Calendar, Edit, Trash2 } from "lucide-react";
-
-interface Property {
-  id: string;
-  title: string;
-  description: string;
-  rent: number;
-  location: string;
-  bedrooms: number;
-  bathrooms: number;
-  amenities: string[];
-  images: string[];
-  availableFrom: string;
-  propertyType: string;
-  status: 'available' | 'rented' | 'pending';
-}
+import type { Property } from '@/types/database';
 
 interface PropertyCardProps {
   property: Property;
   onEdit?: (property: Property) => void;
   onDelete?: (propertyId: string) => void;
+  onViewDetails?: (property: Property) => void;
   showActions?: boolean;
 }
 
-const PropertyCard = ({ property, onEdit, onDelete, showActions = false }: PropertyCardProps) => {
+const PropertyCard = ({ property, onEdit, onDelete, onViewDetails, showActions = false }: PropertyCardProps) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-GB', {
       day: 'numeric',
@@ -46,6 +33,12 @@ const PropertyCard = ({ property, onEdit, onDelete, showActions = false }: Prope
       default:
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }
+  };
+
+  const formatPropertyType = (type: string) => {
+    return type.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
   };
 
   return (
@@ -88,17 +81,19 @@ const PropertyCard = ({ property, onEdit, onDelete, showActions = false }: Prope
             {property.bathrooms} bath{property.bathrooms > 1 ? 's' : ''}
           </div>
           <Badge variant="outline" className="text-xs">
-            {property.propertyType}
+            {formatPropertyType(property.property_type)}
           </Badge>
         </div>
 
         <div className="flex items-center text-sm text-gray-600">
           <Calendar className="h-4 w-4 mr-1" />
-          Available from {formatDate(property.availableFrom)}
+          Available from {formatDate(property.available_from)}
         </div>
 
         {/* Description */}
-        <p className="text-sm text-gray-600 line-clamp-2">{property.description}</p>
+        {property.description && (
+          <p className="text-sm text-gray-600 line-clamp-2">{property.description}</p>
+        )}
 
         {/* Amenities */}
         {property.amenities.length > 0 && (
@@ -139,7 +134,10 @@ const PropertyCard = ({ property, onEdit, onDelete, showActions = false }: Prope
               </Button>
             </>
           ) : (
-            <Button className="w-full bg-green-600 hover:bg-green-700">
+            <Button 
+              className="w-full bg-green-600 hover:bg-green-700"
+              onClick={() => onViewDetails?.(property)}
+            >
               View Details
             </Button>
           )}

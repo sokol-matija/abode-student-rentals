@@ -9,7 +9,189 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      inquiries: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          owner_id: string
+          property_id: string
+          status: Database["public"]["Enums"]["inquiry_status"]
+          student_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          owner_id: string
+          property_id: string
+          status?: Database["public"]["Enums"]["inquiry_status"]
+          student_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          owner_id?: string
+          property_id?: string
+          status?: Database["public"]["Enums"]["inquiry_status"]
+          student_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inquiries_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inquiries_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inquiries_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inquiry_messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          inquiry_id: string
+          message: string
+          sender_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          inquiry_id: string
+          message: string
+          sender_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          inquiry_id?: string
+          message?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inquiry_messages_inquiry_id_fkey"
+            columns: ["inquiry_id"]
+            isOneToOne: false
+            referencedRelation: "inquiries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inquiry_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          full_name: string
+          id: string
+          phone: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          full_name: string
+          id: string
+          phone: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          full_name?: string
+          id?: string
+          phone?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      properties: {
+        Row: {
+          amenities: string[] | null
+          available_from: string
+          bathrooms: number
+          bedrooms: number
+          created_at: string | null
+          description: string | null
+          id: string
+          images: string[] | null
+          location: string
+          owner_id: string
+          property_type: Database["public"]["Enums"]["property_type"]
+          rent: number
+          status: Database["public"]["Enums"]["property_status"]
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          amenities?: string[] | null
+          available_from: string
+          bathrooms?: number
+          bedrooms?: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          location: string
+          owner_id: string
+          property_type: Database["public"]["Enums"]["property_type"]
+          rent: number
+          status?: Database["public"]["Enums"]["property_status"]
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          amenities?: string[] | null
+          available_from?: string
+          bathrooms?: number
+          bedrooms?: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          location?: string
+          owner_id?: string
+          property_type?: Database["public"]["Enums"]["property_type"]
+          rent?: number
+          status?: Database["public"]["Enums"]["property_status"]
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "properties_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +200,10 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      inquiry_status: "pending" | "responded" | "closed"
+      property_status: "available" | "rented" | "pending"
+      property_type: "house" | "apartment" | "studio" | "shared_room"
+      user_role: "student" | "property_owner"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +318,11 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      inquiry_status: ["pending", "responded", "closed"],
+      property_status: ["available", "rented", "pending"],
+      property_type: ["house", "apartment", "studio", "shared_room"],
+      user_role: ["student", "property_owner"],
+    },
   },
 } as const

@@ -1,199 +1,278 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Home, Plus, Building, MessageCircle, User, Bell, Calendar } from "lucide-react";
+import { Home, Plus, MessageSquare, LogOut, User } from "lucide-react";
 import AddPropertyForm from '../property/AddPropertyForm';
 import PropertyCard from '../property/PropertyCard';
+import { getProperties, deleteProperty, signOut } from '@/services/database';
+import { useToast } from "@/hooks/use-toast";
+import type { Profile, Property } from '@/types/database';
 
 interface PropertyOwnerDashboardProps {
-  profile: {
-    fullName: string;
-    phone: string;
-  };
-}
-
-interface Property {
-  id: string;
-  title: string;
-  description: string;
-  rent: number;
-  location: string;
-  bedrooms: number;
-  bathrooms: number;
-  amenities: string[];
-  images: string[];
-  availableFrom: string;
-  propertyType: string;
-  status: 'available' | 'rented' | 'pending';
+  profile: Profile;
 }
 
 const PropertyOwnerDashboard = ({ profile }: PropertyOwnerDashboardProps) => {
-  const [activeTab, setActiveTab] = useState('properties');
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'add-property' | 'messages'>('overview');
   const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
-  const tabs = [
-    { id: 'properties', label: 'My Properties', icon: Building },
-    { id: 'bookings', label: 'Booking Requests', icon: Calendar },
-    { id: 'messages', label: 'Messages', icon: MessageCircle },
-  ];
+  useEffect(() => {
+    loadProperties();
+  }, []);
 
-  const handleAddProperty = (propertyData: any) => {
-    const newProperty: Property = {
-      id: Date.now().toString(),
-      ...propertyData,
-      status: 'available' as const
-    };
-    setProperties(prev => [...prev, newProperty]);
-    setShowAddForm(false);
+  const loadProperties = async () => {
+    try {
+      setLoading(true);
+      const data = await getProperties(profile.id);
+      setProperties(data || []);
+    } catch (error) {
+      console.error('Error loading properties:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load properties",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePropertyAdded = (newProperty: Property) => {
+    setProperties(prev => [newProperty, ...prev]);
+    setActiveTab('properties');
+    toast({
+      title: "Success",
+      description: "Property added successfully!",
+    });
   };
 
   const handleEditProperty = (property: Property) => {
-    console.log('Edit property:', property);
     // TODO: Implement edit functionality
+    console.log('Edit property:', property);
   };
 
-  const handleDeleteProperty = (propertyId: string) => {
-    setProperties(prev => prev.filter(p => p.id !== propertyId));
+  const handleDeleteProperty = async (propertyId: string) => {
+    try {
+      await deleteProperty(propertyId);
+      setProperties(prev => prev.filter(p => p.id !== propertyId));
+      toast({
+        title: "Success",
+        description: "Property deleted successfully!",
+      });
+    } catch (error) {
+      console.error('Error deleting property:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete property",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const stats = {
+    totalProperties: properties.length,
+    availableProperties: properties.filter(p => p.status === 'available').length,
+    rentedProperties: properties.filter(p => p.status === 'rented').length,
+    pendingProperties: properties.filter(p => p.status === 'pending').length,
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
               <Home className="h-8 w-8 text-blue-600" />
               <span className="text-2xl font-bold text-gray-900">StudyNest</span>
+              <span className="text-sm text-gray-500 ml-4">Property Owner</span>
             </div>
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <User className="h-5 w-5 text-green-600" />
-                </div>
-                <span className="font-medium text-gray-700">{profile.fullName}</span>
+                <User className="h-5 w-5 text-gray-400" />
+                <span className="text-sm text-gray-700">{profile.full_name}</span>
               </div>
-              <Badge variant="secondary" className="bg-green-100 text-green-700">
-                Property Owner
-              </Badge>
+              <Button variant="outline" size="sm" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Navigation Tabs */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="container mx-auto px-4">
-          <div className="flex space-x-8">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 py-4 border-b-2 transition-colors ${
-                    activeTab === tab.id
-                      ? 'border-green-600 text-green-600'
-                      : 'border-transparent text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  <Icon className="h-5 w-5" />
-                  <span className="font-medium">{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Navigation */}
+        <div className="flex space-x-8 mb-8">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`pb-2 border-b-2 font-medium text-sm ${
+              activeTab === 'overview'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab('properties')}
+            className={`pb-2 border-b-2 font-medium text-sm ${
+              activeTab === 'properties'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            My Properties ({properties.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('add-property')}
+            className={`pb-2 border-b-2 font-medium text-sm ${
+              activeTab === 'add-property'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Add Property
+          </button>
+          <button
+            onClick={() => setActiveTab('messages')}
+            className={`pb-2 border-b-2 font-medium text-sm ${
+              activeTab === 'messages'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Messages
+          </button>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        {activeTab === 'properties' && (
+        {/* Content */}
+        {activeTab === 'overview' && (
           <div className="space-y-6">
-            {showAddForm ? (
-              <AddPropertyForm 
-                onSubmit={handleAddProperty}
-                onCancel={() => setShowAddForm(false)}
-              />
-            ) : (
-              <>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h1 className="text-3xl font-bold text-gray-900">My Properties</h1>
-                    {properties.length > 0 && (
-                      <p className="text-gray-600 mt-1">{properties.length} propert{properties.length === 1 ? 'y' : 'ies'} listed</p>
-                    )}
-                  </div>
-                  <Button 
-                    onClick={() => setShowAddForm(true)}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Total Properties</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.totalProperties}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Available</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">{stats.availableProperties}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Rented</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-blue-600">{stats.rentedProperties}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Pending</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-yellow-600">{stats.pendingProperties}</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex space-x-4">
+                  <Button onClick={() => setActiveTab('add-property')}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add New Property
                   </Button>
+                  <Button variant="outline" onClick={() => setActiveTab('messages')}>
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    View Messages
+                  </Button>
                 </div>
-                
-                {properties.length === 0 ? (
-                  <Card>
-                    <CardContent className="text-center py-12">
-                      <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No properties listed yet</h3>
-                      <p className="text-gray-600 mb-6">Create your first property listing to start connecting with students.</p>
-                      <Button 
-                        onClick={() => setShowAddForm(true)}
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Your First Property
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {properties.map((property) => (
-                      <PropertyCard
-                        key={property.id}
-                        property={property}
-                        onEdit={handleEditProperty}
-                        onDelete={handleDeleteProperty}
-                        showActions={true}
-                      />
-                    ))}
-                  </div>
-                )}
-              </>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {activeTab === 'properties' && (
+          <div>
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-2 text-gray-600">Loading properties...</p>
+              </div>
+            ) : properties.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <Home className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No properties yet</h3>
+                  <p className="text-gray-600 mb-6">Get started by adding your first property listing.</p>
+                  <Button onClick={() => setActiveTab('add-property')}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Your First Property
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {properties.map((property) => (
+                  <PropertyCard
+                    key={property.id}
+                    property={property}
+                    onEdit={handleEditProperty}
+                    onDelete={handleDeleteProperty}
+                    showActions={true}
+                  />
+                ))}
+              </div>
             )}
           </div>
         )}
 
-        {activeTab === 'bookings' && (
-          <div className="space-y-6">
-            <h1 className="text-3xl font-bold text-gray-900">Booking Requests</h1>
-            <Card>
-              <CardContent className="text-center py-12">
-                <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No booking requests</h3>
-                <p className="text-gray-600">Booking requests from students will appear here.</p>
-              </CardContent>
-            </Card>
-          </div>
+        {activeTab === 'add-property' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Add New Property</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AddPropertyForm onSubmit={handlePropertyAdded} ownerId={profile.id} />
+            </CardContent>
+          </Card>
         )}
 
         {activeTab === 'messages' && (
-          <div className="space-y-6">
-            <h1 className="text-3xl font-bold text-gray-900">Messages</h1>
-            <Card>
-              <CardContent className="text-center py-12">
-                <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No messages yet</h3>
-                <p className="text-gray-600">Messages from interested students will appear here.</p>
-              </CardContent>
-            </Card>
-          </div>
+          <Card>
+            <CardContent className="text-center py-12">
+              <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Messages</h3>
+              <p className="text-gray-600">Your inquiries and messages will appear here.</p>
+            </CardContent>
+          </Card>
         )}
-      </main>
+      </div>
     </div>
   );
 };
