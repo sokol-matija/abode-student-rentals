@@ -44,3 +44,17 @@ export interface InquiryMessage {
   message: string;
   created_at: string;
 }
+
+export interface RentPayment {
+  id: string;
+  property_id: string;
+  tenant_id: string;
+  stripe_customer_id: string;
+  stripe_subscription_id: string;
+  monthly_rent: number;
+  status: 'active' | 'cancelled' | 'past_due';
+  current_period_start: string;
+  current_period_end: string;
+  created_at: string;
+  updated_at: string;
+}

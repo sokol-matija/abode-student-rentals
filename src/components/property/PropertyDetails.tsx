@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { MapPin, Home, Bath, Bed, Calendar, Phone, Mail, MessageSquare, Heart, Share2, X } from "lucide-react";
 import { getProfile, createInquiry } from '@/services/database';
 import { useToast } from "@/hooks/use-toast";
+import RentPayment from '@/components/payment/RentPayment';
+import { supabase } from '@/integrations/supabase/client';
 import type { Property, Profile } from '@/types/database';
 
 interface PropertyDetailsProps {
@@ -24,13 +25,18 @@ const PropertyDetails = ({ property, open, onClose, currentUserId }: PropertyDet
   const [inquiryMessage, setInquiryMessage] = useState('');
   const [isSaved, setIsSaved] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [hasActivePayment, setHasActivePayment] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
     if (open && property.owner_id) {
       loadOwnerProfile();
+      if (currentUserId) {
+        checkRentPaymentStatus();
+      }
     }
-  }, [open, property.owner_id]);
+  }, [open, property.owner_id, currentUserId]);
 
   const loadOwnerProfile = async () => {
     try {
@@ -38,6 +44,25 @@ const PropertyDetails = ({ property, open, onClose, currentUserId }: PropertyDet
       setOwnerProfile(profile);
     } catch (error) {
       console.error('Error loading owner profile:', error);
+    }
+  };
+
+  const checkRentPaymentStatus = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('rent_payments')
+        .select('*')
+        .eq('property_id', property.id)
+        .eq('tenant_id', currentUserId)
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (data) {
+        setHasActivePayment(true);
+        setPaymentStatus(data.status || 'active');
+      }
+    } catch (error) {
+      console.error('Error checking payment status:', error);
     }
   };
 
@@ -223,8 +248,17 @@ const PropertyDetails = ({ property, open, onClose, currentUserId }: PropertyDet
               )}
             </div>
 
-            {/* Contact Info */}
+            {/* Contact Info and Payment */}
             <div className="space-y-4">
+              {/* Rent Payment Section */}
+              <RentPayment 
+                property={property}
+                currentUserId={currentUserId}
+                hasActivePayment={hasActivePayment}
+                paymentStatus={paymentStatus}
+              />
+
+              {/* Contact Info */}
               <Card>
                 <CardHeader>
                   <CardTitle>Contact Property Owner</CardTitle>
