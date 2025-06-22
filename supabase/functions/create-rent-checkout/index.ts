@@ -64,6 +64,25 @@ serve(async (req) => {
 
     const user = userData.user;
 
+    // Check for existing rent payment record
+    console.log("🔍 Checking for existing rent payment...");
+    const { data: existingPayment, error: paymentCheckError } = await supabaseClient
+      .from('rent_payments')
+      .select('*')
+      .eq('property_id', propertyId)
+      .eq('tenant_id', user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (paymentCheckError) {
+      console.log("⚠️ Error checking existing payment:", paymentCheckError.message);
+    }
+
+    if (existingPayment) {
+      console.log("🚫 Existing active subscription found:", existingPayment.id);
+      throw new Error("You already have an active subscription for this property. Use 'Manage Subscription' to modify your existing subscription.");
+    }
+
     // Get property details
     console.log("🏠 Fetching property...");
     const { data: property, error: propertyError } = await supabaseClient
@@ -95,6 +114,26 @@ serve(async (req) => {
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
       console.log("👥 Found existing customer:", customerId);
+
+      // Check for existing active subscriptions in Stripe
+      console.log("🔍 Checking for active Stripe subscriptions...");
+      const subscriptions = await stripe.subscriptions.list({
+        customer: customerId,
+        status: 'active',
+        limit: 10
+      });
+
+      // Check if any subscription matches this property's rent amount
+      const propertyRentInCents = Math.round(property.rent * 100);
+      const existingSubscription = subscriptions.data.find(sub => {
+        const subAmount = sub.items.data[0]?.price.unit_amount;
+        return subAmount === propertyRentInCents;
+      });
+
+      if (existingSubscription) {
+        console.log("🚫 Found existing Stripe subscription with same amount:", existingSubscription.id);
+        throw new Error("You already have an active subscription with the same rent amount. Please cancel your existing subscription before creating a new one.");
+      }
     } else {
       console.log("👥 No existing customer found");
     }
