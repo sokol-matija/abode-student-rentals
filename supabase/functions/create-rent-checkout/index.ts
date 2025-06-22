@@ -160,9 +160,11 @@ serve(async (req) => {
       mode: "subscription",
       success_url: `${req.headers.get("origin")}/rent-payment-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get("origin")}/`,
-      metadata: {
-        property_id: propertyId,
-        tenant_id: user.id,
+      subscription_data: {
+        metadata: {
+          property_id: propertyId,
+          tenant_id: user.id,
+        },
       },
     });
 

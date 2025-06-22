@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
+
+import { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Home, Search, Filter, MapPin, LogOut, User } from "lucide-react";
-import PropertyCard from '../property/PropertyCard';
-import PropertyDetails from '../property/PropertyDetails';
-import InquiryList from '../messaging/InquiryList';
-import { getProperties, signOut } from '@/services/database';
-import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Home, MessageSquare, User, LogOut, CreditCard } from "lucide-react";
+import { getCurrentUser, signOut, getProperties } from '@/services/database';
+import { useQuery } from '@tanstack/react-query';
+import PropertyCard from '@/components/property/PropertyCard';
+import InquiryList from '@/components/messaging/InquiryList';
+import PaymentHistory from '@/components/payment/PaymentHistory';
 import type { Profile, Property } from '@/types/database';
 
 interface StudentDashboardProps {
@@ -15,80 +16,12 @@ interface StudentDashboardProps {
 }
 
 const StudentDashboard = ({ profile }: StudentDashboardProps) => {
-  const [activeTab, setActiveTab] = useState<'browse' | 'saved' | 'messages'>('browse');
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-  const [showPropertyDetails, setShowPropertyDetails] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filters, setFilters] = useState({
-    minRent: '',
-    maxRent: '',
-    bedrooms: '',
-    propertyType: '',
+
+  const { data: properties = [], isLoading: propertiesLoading } = useQuery({
+    queryKey: ['properties'],
+    queryFn: () => getProperties(),
   });
-  const { toast } = useToast();
-
-  useEffect(() => {
-    loadProperties();
-  }, []);
-
-  useEffect(() => {
-    filterProperties();
-  }, [properties, searchTerm, filters]);
-
-  const loadProperties = async () => {
-    try {
-      setLoading(true);
-      const data = await getProperties();
-      // Only show available properties to students
-      const availableProperties = (data || []).filter(p => p.status === 'available');
-      setProperties(availableProperties);
-    } catch (error) {
-      console.error('Error loading properties:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load properties",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterProperties = () => {
-    let filtered = properties;
-
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(property =>
-        property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        property.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        property.description?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Rent filter
-    if (filters.minRent) {
-      filtered = filtered.filter(property => property.rent >= parseInt(filters.minRent));
-    }
-    if (filters.maxRent) {
-      filtered = filtered.filter(property => property.rent <= parseInt(filters.maxRent));
-    }
-
-    // Bedrooms filter
-    if (filters.bedrooms) {
-      filtered = filtered.filter(property => property.bedrooms >= parseInt(filters.bedrooms));
-    }
-
-    // Property type filter
-    if (filters.propertyType) {
-      filtered = filtered.filter(property => property.property_type === filters.propertyType);
-    }
-
-    setFilteredProperties(filtered);
-  };
 
   const handleSignOut = async () => {
     try {
@@ -98,221 +31,132 @@ const StudentDashboard = ({ profile }: StudentDashboardProps) => {
     }
   };
 
-  const handleViewDetails = (property: Property) => {
-    setSelectedProperty(property);
-    setShowPropertyDetails(true);
-  };
-
-  const handleClosePropertyDetails = () => {
-    setShowPropertyDetails(false);
-    setSelectedProperty(null);
-  };
+  const availableProperties = properties.filter(property => property.status === 'available');
 
   return (
-    <>
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <header className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center space-x-2">
-                <Home className="h-8 w-8 text-blue-600" />
-                <span className="text-2xl font-bold text-gray-900">StudyNest</span>
-                <span className="text-sm text-gray-500 ml-4">Student</span>
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <User className="h-5 w-5 text-gray-400" />
-                  <span className="text-sm text-gray-700">{profile.full_name}</span>
-                </div>
-                <Button variant="outline" size="sm" onClick={handleSignOut}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Sign Out
-                </Button>
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center space-x-4">
+              <Home className="h-8 w-8 text-blue-600" />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">StudyNest</h1>
+                <p className="text-sm text-gray-600">{profile.role === 'student' ? 'Student' : 'Property Owner'} Dashboard</p>
               </div>
             </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">Welcome, {profile.full_name}</span>
+              <Button onClick={handleSignOut} variant="outline" size="sm">
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
           </div>
-        </header>
+        </div>
+      </header>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Navigation */}
-          <div className="flex space-x-8 mb-8">
-            <button
-              onClick={() => setActiveTab('browse')}
-              className={`pb-2 border-b-2 font-medium text-sm ${
-                activeTab === 'browse'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Tabs defaultValue="browse" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="browse" className="flex items-center gap-2">
+              <Home className="h-4 w-4" />
               Browse Properties
-            </button>
-            <button
-              onClick={() => setActiveTab('saved')}
-              className={`pb-2 border-b-2 font-medium text-sm ${
-                activeTab === 'saved'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Saved Properties
-            </button>
-            <button
-              onClick={() => setActiveTab('messages')}
-              className={`pb-2 border-b-2 font-medium text-sm ${
-                activeTab === 'messages'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Messages
-            </button>
-          </div>
+            </TabsTrigger>
+            <TabsTrigger value="inquiries" className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              My Inquiries
+            </TabsTrigger>
+            <TabsTrigger value="payments" className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              Payments
+            </TabsTrigger>
+            <TabsTrigger value="profile" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Profile
+            </TabsTrigger>
+          </TabsList>
 
-          {/* Content */}
-          {activeTab === 'browse' && (
-            <div className="space-y-6">
-              {/* Search and Filters */}
+          <TabsContent value="browse" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-3xl font-bold text-gray-900">Available Properties</h2>
+              <div className="text-sm text-gray-600">
+                {availableProperties.length} properties available
+              </div>
+            </div>
+
+            {propertiesLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="bg-gray-300 h-48 rounded-lg mb-4"></div>
+                    <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+                    <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+                  </div>
+                ))}
+              </div>
+            ) : availableProperties.length === 0 ? (
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Search className="h-5 w-5 mr-2" />
-                    Search Properties
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Search Bar */}
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input
-                      placeholder="Search by title, location, or description..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-
-                  {/* Filters */}
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Min Rent (£)</label>
-                      <Input
-                        type="number"
-                        placeholder="e.g., 500"
-                        value={filters.minRent}
-                        onChange={(e) => setFilters({ ...filters, minRent: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Max Rent (£)</label>
-                      <Input
-                        type="number"
-                        placeholder="e.g., 1000"
-                        value={filters.maxRent}
-                        onChange={(e) => setFilters({ ...filters, maxRent: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Min Bedrooms</label>
-                      <select
-                        value={filters.bedrooms}
-                        onChange={(e) => setFilters({ ...filters, bedrooms: e.target.value })}
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      >
-                        <option value="">Any</option>
-                        <option value="1">1+</option>
-                        <option value="2">2+</option>
-                        <option value="3">3+</option>
-                        <option value="4">4+</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
-                      <select
-                        value={filters.propertyType}
-                        onChange={(e) => setFilters({ ...filters, propertyType: e.target.value })}
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      >
-                        <option value="">Any</option>
-                        <option value="apartment">Apartment</option>
-                        <option value="house">House</option>
-                        <option value="studio">Studio</option>
-                        <option value="shared_room">Shared Room</option>
-                      </select>
-                    </div>
-                  </div>
+                <CardContent className="text-center py-12">
+                  <Home className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Properties Available</h3>
+                  <p className="text-gray-600">Check back later for new listings!</p>
                 </CardContent>
               </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {availableProperties.map((property) => (
+                  <PropertyCard
+                    key={property.id}
+                    property={property}
+                    currentUserId={profile.id}
+                    onSelect={setSelectedProperty}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
 
-              {/* Properties Grid */}
-              {loading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="mt-2 text-gray-600">Loading properties...</p>
-                </div>
-              ) : filteredProperties.length === 0 ? (
-                <Card>
-                  <CardContent className="text-center py-12">
-                    <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      {properties.length === 0 ? 'No properties available' : 'No properties match your filters'}
-                    </h3>
-                    <p className="text-gray-600">
-                      {properties.length === 0 
-                        ? 'Check back later for new listings!' 
-                        : 'Try adjusting your search criteria to see more results.'
-                      }
-                    </p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <p className="text-sm text-gray-600">
-                      Showing {filteredProperties.length} of {properties.length} properties
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredProperties.map((property) => (
-                      <PropertyCard
-                        key={property.id}
-                        property={property}
-                        onViewDetails={handleViewDetails}
-                        showActions={false}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+          <TabsContent value="inquiries">
+            <InquiryList userId={profile.id} userRole={profile.role} />
+          </TabsContent>
 
-          {activeTab === 'saved' && (
+          <TabsContent value="payments">
+            <PaymentHistory currentUserId={profile.id} />
+          </TabsContent>
+
+          <TabsContent value="profile" className="space-y-6">
             <Card>
-              <CardContent className="text-center py-12">
-                <Home className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Saved Properties</h3>
-                <p className="text-gray-600">Your saved properties will appear here.</p>
+              <CardHeader>
+                <CardTitle>Profile Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Full Name</label>
+                    <p className="text-gray-900">{profile.full_name}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Phone</label>
+                    <p className="text-gray-900">{profile.phone}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Role</label>
+                    <p className="text-gray-900 capitalize">{profile.role.replace('_', ' ')}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Member Since</label>
+                    <p className="text-gray-900">
+                      {new Date(profile.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
-          )}
-
-          {activeTab === 'messages' && (
-            <InquiryList profile={profile} />
-          )}
-        </div>
-      </div>
-
-      {/* Property Details Modal */}
-      {selectedProperty && (
-        <PropertyDetails
-          property={selectedProperty}
-          open={showPropertyDetails}
-          onClose={handleClosePropertyDetails}
-          currentUserId={profile.id}
-        />
-      )}
-    </>
+          </TabsContent>
+        </Tabs>
+      </main>
+    </div>
   );
 };
 

@@ -1,1 +1,74 @@
+
 project_id = "dipdkthavyloydxkakhp"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[graphql]
+enabled = true
+port = 54329
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[inbound_email]
+enabled = false
+port = 54330
+smtp_port = 54325
+smtp_servers_map = {}
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[realtime]
+enabled =  true
+ip_version = "ipv6"
+port = 54323
+max_header_size = 4096
+
+[studio]
+enabled = true
+port = 54323
+api_url = "http://127.0.0.1:54321"
+openai_api_key = "env(OPENAI_API_KEY)"
+
+[auth]
+enabled = true
+port = 54324
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = ["https://127.0.0.1:3000"]
+jwt_expiry = 3600
+refresh_token_rotation_enabled = true
+refresh_token_reuse_interval = 10
+enable_signup = true
+enable_anonymous_sign_ins = false
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+
+[auth.sms]
+enable_signup = true
+enable_confirmations = false
+template = "Your code is {{ .Code }} ."
+
+[edge_runtime]
+enabled = true
+port = 54326
+inspector_port = 54327
+
+[analytics]
+enabled = false
+port = 54327
+vector_port = 54328
+backend = "postgres"
