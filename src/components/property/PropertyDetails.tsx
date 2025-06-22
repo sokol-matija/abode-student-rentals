@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { MapPin, Home, Bath, Bed, Calendar, Phone, Mail, MessageSquare, Heart, Share2, X } from "lucide-react";
+import { MapPin, Home, Bath, Bed, Calendar, Phone, MessageSquare, Heart, Share2, X } from "lucide-react";
 import { getProfile, createInquiry } from '@/services/database';
 import { useToast } from "@/hooks/use-toast";
 import RentPayment from '@/components/payment/RentPayment';
@@ -25,15 +25,13 @@ const PropertyDetails = ({ property, open, onClose, currentUserId }: PropertyDet
   const [inquiryMessage, setInquiryMessage] = useState('');
   const [isSaved, setIsSaved] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [hasActivePayment, setHasActivePayment] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
     if (open && property.owner_id) {
       loadOwnerProfile();
     }
-  }, [open, property.owner_id, currentUserId]);
+  }, [open, property.owner_id]);
 
   const loadOwnerProfile = async () => {
     try {
@@ -232,8 +230,6 @@ const PropertyDetails = ({ property, open, onClose, currentUserId }: PropertyDet
               <RentPayment 
                 property={property}
                 currentUserId={currentUserId}
-                hasActivePayment={hasActivePayment}
-                paymentStatus={paymentStatus}
               />
 
               {/* Contact Info */}

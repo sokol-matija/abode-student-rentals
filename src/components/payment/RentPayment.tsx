@@ -2,8 +2,7 @@
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { CreditCard, Settings, CheckCircle, AlertCircle } from "lucide-react";
+import { CreditCard, Settings, AlertCircle } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import type { Property } from '@/types/database';
@@ -11,11 +10,9 @@ import type { Property } from '@/types/database';
 interface RentPaymentProps {
   property: Property;
   currentUserId?: string;
-  hasActivePayment?: boolean;
-  paymentStatus?: string;
 }
 
-const RentPayment = ({ property, currentUserId, hasActivePayment, paymentStatus }: RentPaymentProps) => {
+const RentPayment = ({ property, currentUserId }: RentPaymentProps) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -89,39 +86,27 @@ const RentPayment = ({ property, currentUserId, hasActivePayment, paymentStatus 
           <div className="text-sm text-gray-600">per month</div>
         </div>
 
-        {hasActivePayment && (
-          <div className="flex items-center justify-center gap-2 p-3 bg-green-50 rounded-lg">
-            <CheckCircle className="h-4 w-4 text-green-600" />
-            <span className="text-green-800 font-medium">Active Subscription</span>
-            <Badge variant="secondary" className="ml-2">
-              {paymentStatus}
-            </Badge>
-          </div>
-        )}
-
         <div className="space-y-2">
-          {!hasActivePayment ? (
-            <Button 
-              onClick={handleStartPayment}
-              disabled={!currentUserId || loading}
-              className="w-full"
-              size="lg"
-            >
-              <CreditCard className="h-4 w-4 mr-2" />
-              {loading ? 'Starting Payment...' : 'Start Monthly Rent Payment'}
-            </Button>
-          ) : (
-            <Button 
-              onClick={handleManageSubscription}
-              disabled={loading}
-              variant="outline"
-              className="w-full"
-              size="lg"
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              {loading ? 'Opening...' : 'Manage Subscription'}
-            </Button>
-          )}
+          <Button 
+            onClick={handleStartPayment}
+            disabled={!currentUserId || loading}
+            className="w-full"
+            size="lg"
+          >
+            <CreditCard className="h-4 w-4 mr-2" />
+            {loading ? 'Starting Payment...' : 'Start Monthly Rent Payment'}
+          </Button>
+          
+          <Button 
+            onClick={handleManageSubscription}
+            disabled={loading}
+            variant="outline"
+            className="w-full"
+            size="lg"
+          >
+            <Settings className="h-4 w-4 mr-2" />
+            {loading ? 'Opening...' : 'Manage Subscription'}
+          </Button>
         </div>
 
         <div className="text-xs text-gray-500 text-center">
