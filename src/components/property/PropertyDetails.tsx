@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +10,6 @@ import { MapPin, Home, Bath, Bed, Calendar, Phone, Mail, MessageSquare, Heart, S
 import { getProfile, createInquiry } from '@/services/database';
 import { useToast } from "@/hooks/use-toast";
 import RentPayment from '@/components/payment/RentPayment';
-import { supabase } from '@/integrations/supabase/client';
 import type { Property, Profile } from '@/types/database';
 
 interface PropertyDetailsProps {
@@ -32,10 +32,6 @@ const PropertyDetails = ({ property, open, onClose, currentUserId }: PropertyDet
   useEffect(() => {
     if (open && property.owner_id) {
       loadOwnerProfile();
-      if (currentUserId) {
-        // Remove rent payment status check for now due to type issues
-        // Will be re-enabled once database migration is applied
-      }
     }
   }, [open, property.owner_id, currentUserId]);
 
@@ -45,25 +41,6 @@ const PropertyDetails = ({ property, open, onClose, currentUserId }: PropertyDet
       setOwnerProfile(profile);
     } catch (error) {
       console.error('Error loading owner profile:', error);
-    }
-  };
-
-  const checkRentPaymentStatus = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('rent_payments')
-        .select('*')
-        .eq('property_id', property.id)
-        .eq('tenant_id', currentUserId)
-        .eq('status', 'active')
-        .maybeSingle();
-
-      if (data) {
-        setHasActivePayment(true);
-        setPaymentStatus(data.status || 'active');
-      }
-    } catch (error) {
-      console.error('Error checking payment status:', error);
     }
   };
 
