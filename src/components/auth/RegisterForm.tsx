@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,8 +41,17 @@ const RegisterForm = ({ onSwitchToLogin, onClose }: RegisterFormProps) => {
     setLoading(true);
 
     try {
-      console.log('Attempting to register user:', email);
+      console.log('=== REGISTRATION DEBUG START ===');
+      console.log('Email:', email);
+      console.log('Password length:', password.length);
+      console.log('Current URL:', window.location.origin);
       
+      // First, let's test the Supabase connection
+      console.log('Testing Supabase connection...');
+      const { data: connectionTest, error: connectionError } = await supabase.auth.getSession();
+      console.log('Connection test result:', { data: connectionTest, error: connectionError });
+      
+      console.log('Attempting user registration...');
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -56,46 +64,75 @@ const RegisterForm = ({ onSwitchToLogin, onClose }: RegisterFormProps) => {
         }
       });
 
-      console.log('Registration response:', { data, error });
+      console.log('=== REGISTRATION RESPONSE ===');
+      console.log('Full response data:', JSON.stringify(data, null, 2));
+      console.log('Error details:', error);
+      console.log('Error code:', error?.status);
+      console.log('Error message:', error?.message);
+      console.log('=== END REGISTRATION RESPONSE ===');
 
       if (error) {
-        console.error('Registration error:', error);
+        console.error('Registration failed with error:', error);
+        
+        // Provide more specific error messages
+        let errorMessage = error.message;
+        if (error.message?.includes('email')) {
+          errorMessage = "Email address may already be registered or invalid.";
+        } else if (error.message?.includes('password')) {
+          errorMessage = "Password does not meet requirements.";
+        } else if (error.message?.includes('signup')) {
+          errorMessage = "Registration is currently disabled or misconfigured.";
+        }
+        
         toast({
           title: "Registration Failed",
-          description: error.message,
+          description: `${errorMessage} (${error.status || 'Unknown error'})`,
           variant: "destructive",
         });
       } else {
-        console.log('Registration successful:', data);
+        console.log('Registration appears successful!');
+        console.log('User created:', data.user ? 'Yes' : 'No');
+        console.log('Session created:', data.session ? 'Yes' : 'No');
+        console.log('User email confirmed:', data.user?.email_confirmed_at ? 'Yes' : 'No');
+        
         toast({
           title: "Registration Successful!",
-          description: "Please check your email to confirm your account, or you may be automatically signed in.",
+          description: data.session ? 
+            "You have been automatically signed in!" : 
+            "Please check your email to confirm your account.",
         });
         
-        // If user is immediately confirmed (which happens in development)
-        if (data.user && !data.user.email_confirmed_at) {
+        // Handle different registration outcomes
+        if (data.session) {
+          console.log('User has active session, closing modal');
+          onClose();
+        } else if (data.user && !data.user.email_confirmed_at) {
+          console.log('User created but needs email confirmation');
           toast({
             title: "Email Confirmation Required",
-            description: "Please check your email and click the confirmation link.",
+            description: "Please check your email and click the confirmation link to complete registration.",
           });
-        }
-        
-        // Don't switch to login if user is already signed in
-        if (data.session) {
-          onClose();
+          onSwitchToLogin();
         } else {
+          console.log('Registration completed, switching to login');
           onSwitchToLogin();
         }
       }
     } catch (error: any) {
-      console.error('Unexpected registration error:', error);
+      console.error('=== UNEXPECTED ERROR ===');
+      console.error('Error type:', typeof error);
+      console.error('Error object:', error);
+      console.error('Error stack:', error.stack);
+      console.error('=== END UNEXPECTED ERROR ===');
+      
       toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        title: "Unexpected Error",
+        description: `Registration failed: ${error.message || 'Unknown error occurred'}`,
         variant: "destructive",
       });
     } finally {
       setLoading(false);
+      console.log('=== REGISTRATION DEBUG END ===');
     }
   };
 
