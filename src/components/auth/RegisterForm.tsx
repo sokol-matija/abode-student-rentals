@@ -42,28 +42,53 @@ const RegisterForm = ({ onSwitchToLogin, onClose }: RegisterFormProps) => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
+      console.log('Attempting to register user:', email);
+      
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            full_name: 'New User',
+            phone: ''
+          }
         }
       });
 
+      console.log('Registration response:', { data, error });
+
       if (error) {
+        console.error('Registration error:', error);
         toast({
           title: "Registration Failed",
           description: error.message,
           variant: "destructive",
         });
       } else {
+        console.log('Registration successful:', data);
         toast({
           title: "Registration Successful!",
-          description: "Please check your email to confirm your account.",
+          description: "Please check your email to confirm your account, or you may be automatically signed in.",
         });
-        onSwitchToLogin();
+        
+        // If user is immediately confirmed (which happens in development)
+        if (data.user && !data.user.email_confirmed_at) {
+          toast({
+            title: "Email Confirmation Required",
+            description: "Please check your email and click the confirmation link.",
+          });
+        }
+        
+        // Don't switch to login if user is already signed in
+        if (data.session) {
+          onClose();
+        } else {
+          onSwitchToLogin();
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Unexpected registration error:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
@@ -76,6 +101,7 @@ const RegisterForm = ({ onSwitchToLogin, onClose }: RegisterFormProps) => {
 
   const handleGoogleSignUp = async () => {
     try {
+      console.log('Attempting Google sign up');
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -84,13 +110,15 @@ const RegisterForm = ({ onSwitchToLogin, onClose }: RegisterFormProps) => {
       });
 
       if (error) {
+        console.error('Google sign up error:', error);
         toast({
           title: "Google Sign Up Failed",
           description: error.message,
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Unexpected Google sign up error:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred with Google sign up.",
