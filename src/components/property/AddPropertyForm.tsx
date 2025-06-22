@@ -4,11 +4,11 @@ import { useForm } from 'react-hook-form';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { X, Plus } from "lucide-react";
 import { createProperty } from '@/services/database';
 import { useToast } from "@/hooks/use-toast";
+import ImageUpload from './ImageUpload';
 import type { Property } from '@/types/database';
 
 interface PropertyFormData {
@@ -30,6 +30,7 @@ interface AddPropertyFormProps {
 const AddPropertyForm = ({ onSubmit, ownerId }: AddPropertyFormProps) => {
   const [amenities, setAmenities] = useState<string[]>([]);
   const [newAmenity, setNewAmenity] = useState('');
+  const [images, setImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
@@ -62,7 +63,7 @@ const AddPropertyForm = ({ onSubmit, ownerId }: AddPropertyFormProps) => {
         status: 'available' as const,
         amenities,
         available_from: data.availableFrom,
-        images: [], // We'll implement image upload later
+        images,
       };
 
       const newProperty = await createProperty(propertyData);
@@ -71,6 +72,12 @@ const AddPropertyForm = ({ onSubmit, ownerId }: AddPropertyFormProps) => {
       // Reset form
       reset();
       setAmenities([]);
+      setImages([]);
+      
+      toast({
+        title: "Success",
+        description: "Property created successfully!",
+      });
       
     } catch (error) {
       console.error('Error creating property:', error);
@@ -212,6 +219,15 @@ const AddPropertyForm = ({ onSubmit, ownerId }: AddPropertyFormProps) => {
             <p className="text-sm text-red-600 mt-1">{errors.availableFrom.message}</p>
           )}
         </div>
+      </div>
+
+      {/* Image Upload */}
+      <div>
+        <ImageUpload 
+          images={images} 
+          onImagesChange={setImages}
+          maxImages={5}
+        />
       </div>
 
       {/* Amenities */}
