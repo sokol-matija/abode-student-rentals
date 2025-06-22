@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Home, Search, Filter, MapPin, LogOut, User } from "lucide-react";
 import PropertyCard from '../property/PropertyCard';
+import InquiryList from '../messaging/InquiryList';
 import { getProperties, signOut } from '@/services/database';
 import { useToast } from "@/hooks/use-toast";
 import type { Profile, Property } from '@/types/database';
@@ -293,13 +293,7 @@ const StudentDashboard = ({ profile }: StudentDashboardProps) => {
         )}
 
         {activeTab === 'messages' && (
-          <Card>
-            <CardContent className="text-center py-12">
-              <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Messages</h3>
-              <p className="text-gray-600">Your conversations with property owners will appear here.</p>
-            </CardContent>
-          </Card>
+          <InquiryList profile={profile} />
         )}
       </div>
     </div>

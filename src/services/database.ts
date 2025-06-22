@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile, Property } from "@/types/database";
 
@@ -92,6 +91,56 @@ export const deleteProperty = async (propertyId: string) => {
     .eq('id', propertyId);
 
   if (error) throw error;
+};
+
+// Inquiry Services
+export const createInquiry = async (inquiryData: {
+  property_id: string;
+  student_id: string;
+  owner_id: string;
+  message: string;
+  status: 'pending' | 'responded' | 'closed';
+}) => {
+  const { data, error } = await supabase
+    .from('inquiries')
+    .insert([inquiryData])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+export const getInquiries = async (userId: string, userRole: 'student' | 'property_owner') => {
+  let query = supabase.from('inquiries').select(`
+    *,
+    properties!inner(title, location, rent),
+    profiles!inquiries_student_id_fkey(full_name),
+    owner_profiles:profiles!inquiries_owner_id_fkey(full_name)
+  `);
+
+  if (userRole === 'student') {
+    query = query.eq('student_id', userId);
+  } else {
+    query = query.eq('owner_id', userId);
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data;
+};
+
+export const updateInquiryStatus = async (inquiryId: string, status: 'pending' | 'responded' | 'closed') => {
+  const { data, error } = await supabase
+    .from('inquiries')
+    .update({ status })
+    .eq('id', inquiryId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
 };
 
 // Auth Services
