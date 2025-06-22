@@ -1,9 +1,9 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Home, Search, MessageCircle, User, Bell, Heart } from "lucide-react";
+import PropertyCard from '../property/PropertyCard';
 
 interface StudentDashboardProps {
   profile: {
@@ -11,6 +11,94 @@ interface StudentDashboardProps {
     phone: string;
   };
 }
+
+// Sample properties for demonstration
+const sampleProperties = [
+  {
+    id: '1',
+    title: 'Modern Student Room Near University',
+    description: 'Comfortable single room in a shared house, just 10 minutes walk from campus. Includes all bills and high-speed WiFi.',
+    rent: 450,
+    location: 'Manchester City Centre',
+    bedrooms: 1,
+    bathrooms: 1,
+    amenities: ['WiFi', 'Bills Included', 'Furnished', 'Kitchen Access', 'Laundry'],
+    images: [],
+    availableFrom: '2024-09-01',
+    propertyType: 'room',
+    status: 'available' as const
+  },
+  {
+    id: '2',
+    title: 'Studio Apartment with Garden View',
+    description: 'Self-contained studio with kitchenette and private bathroom. Perfect for students who value privacy and independence.',
+    rent: 650,
+    location: 'Leeds Student Quarter',
+    bedrooms: 1,
+    bathrooms: 1,
+    amenities: ['WiFi', 'Parking', 'Garden', 'Furnished', 'Bills Included'],
+    images: [],
+    availableFrom: '2024-08-15',
+    propertyType: 'studio',
+    status: 'available' as const
+  },
+  {
+    id: '3',
+    title: 'Shared House Room with Study Space',
+    description: 'Large bedroom in friendly house share with dedicated study area. Great transport links to university.',
+    rent: 380,
+    location: 'Birmingham Selly Oak',
+    bedrooms: 1,
+    bathrooms: 2,
+    amenities: ['WiFi', 'Study Room', 'Kitchen Access', 'Laundry', 'Garden'],
+    images: [],
+    availableFrom: '2024-09-15',
+    propertyType: 'room',
+    status: 'available' as const
+  },
+  {
+    id: '4',
+    title: 'Luxury Student Apartment',
+    description: 'Premium apartment with gym access and 24/7 security. Modern furnishing and all utilities included.',
+    rent: 750,
+    location: 'London Zone 2',
+    bedrooms: 1,
+    bathrooms: 1,
+    amenities: ['WiFi', 'Gym', 'Bills Included', 'Furnished', 'Parking'],
+    images: [],
+    availableFrom: '2024-08-01',
+    propertyType: 'studio',
+    status: 'available' as const
+  },
+  {
+    id: '5',
+    title: 'Cozy Room in Victorian House',
+    description: 'Character property with original features. Close to shops, restaurants and public transport.',
+    rent: 420,
+    location: 'Bristol Clifton',
+    bedrooms: 1,
+    bathrooms: 1,
+    amenities: ['WiFi', 'Kitchen Access', 'Laundry', 'Bills Included'],
+    images: [],
+    availableFrom: '2024-09-01',
+    propertyType: 'room',
+    status: 'available' as const
+  },
+  {
+    id: '6',
+    title: 'Modern Shared Apartment',
+    description: 'Contemporary apartment share with fellow students. Communal areas and private bedrooms.',
+    rent: 520,
+    location: 'Edinburgh Old Town',
+    bedrooms: 1,
+    bathrooms: 2,
+    amenities: ['WiFi', 'Furnished', 'Kitchen Access', 'Study Room', 'Bills Included'],
+    images: [],
+    availableFrom: '2024-08-20',
+    propertyType: 'room',
+    status: 'available' as const
+  }
+];
 
 const StudentDashboard = ({ profile }: StudentDashboardProps) => {
   const [activeTab, setActiveTab] = useState('browse');
@@ -77,7 +165,10 @@ const StudentDashboard = ({ profile }: StudentDashboardProps) => {
         {activeTab === 'browse' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold text-gray-900">Browse Properties</h1>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Browse Properties</h1>
+                <p className="text-gray-600 mt-1">{sampleProperties.length} properties available</p>
+              </div>
               <Button className="bg-blue-600 hover:bg-blue-700">
                 <Search className="h-4 w-4 mr-2" />
                 Advanced Search
@@ -85,31 +176,12 @@ const StudentDashboard = ({ profile }: StudentDashboardProps) => {
             </div>
             
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Sample Property Cards */}
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Card key={i} className="hover:shadow-lg transition-shadow cursor-pointer">
-                  <div className="h-48 bg-gradient-to-br from-blue-100 to-green-100 rounded-t-lg flex items-center justify-center">
-                    <Home className="h-12 w-12 text-gray-400" />
-                  </div>
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                      <span className="text-lg">Modern Student Room</span>
-                      <Badge variant="outline" className="text-green-600 border-green-600">
-                        Available
-                      </Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-600 mb-3">Comfortable single room in shared house near university campus.</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold text-gray-900">£450</span>
-                      <span className="text-gray-500">/month</span>
-                    </div>
-                    <Button className="w-full mt-4 bg-blue-600 hover:bg-blue-700">
-                      View Details
-                    </Button>
-                  </CardContent>
-                </Card>
+              {sampleProperties.map((property) => (
+                <PropertyCard
+                  key={property.id}
+                  property={property}
+                  showActions={false}
+                />
               ))}
             </div>
           </div>
