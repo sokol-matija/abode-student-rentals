@@ -55,7 +55,7 @@ const PropertyOwnerDashboard = ({ profile }: PropertyOwnerDashboardProps) => {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActive Tab(tab.id)}
+                  onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center space-x-2 py-4 border-b-2 transition-colors ${
                     activeTab === tab.id
                       ? 'border-green-600 text-green-600'
