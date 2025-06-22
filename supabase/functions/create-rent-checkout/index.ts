@@ -9,45 +9,98 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log("🚀 create-rent-checkout function started");
+  
   if (req.method === "OPTIONS") {
+    console.log("📋 Handling CORS preflight request");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { propertyId } = await req.json();
+    // Check for required environment variables
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
     
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-    );
+    console.log("🔧 Environment check:", {
+      supabaseUrl: supabaseUrl ? "✅ Set" : "❌ Missing",
+      supabaseAnonKey: supabaseAnonKey ? "✅ Set" : "❌ Missing", 
+      stripeSecretKey: stripeSecretKey ? "✅ Set" : "❌ Missing"
+    });
 
-    const authHeader = req.headers.get("Authorization")!;
+    if (!supabaseUrl || !supabaseAnonKey || !stripeSecretKey) {
+      throw new Error("Missing required environment variables");
+    }
+
+    const { propertyId } = await req.json();
+    console.log("📦 Request data:", { propertyId });
+    
+    if (!propertyId) {
+      throw new Error("Property ID is required");
+    }
+
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+
+    const authHeader = req.headers.get("Authorization");
+    console.log("🔐 Auth header:", authHeader ? "✅ Present" : "❌ Missing");
+    
+    if (!authHeader) {
+      throw new Error("Authorization header is required");
+    }
+
     const token = authHeader.replace("Bearer ", "");
-    const { data } = await supabaseClient.auth.getUser(token);
-    const user = data.user;
-    if (!user?.email) throw new Error("User not authenticated");
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    
+    console.log("👤 User authentication:", {
+      success: !userError,
+      userId: userData?.user?.id,
+      email: userData?.user?.email,
+      error: userError?.message
+    });
+    
+    if (userError || !userData.user?.email) {
+      throw new Error(`User authentication failed: ${userError?.message || "No user email"}`);
+    }
+
+    const user = userData.user;
 
     // Get property details
+    console.log("🏠 Fetching property...");
     const { data: property, error: propertyError } = await supabaseClient
       .from('properties')
       .select('*')
       .eq('id', propertyId)
       .single();
     
-    if (propertyError) throw new Error("Property not found");
+    console.log("🏠 Property fetch result:", {
+      success: !propertyError,
+      propertyTitle: property?.title,
+      propertyRent: property?.rent,
+      error: propertyError?.message
+    });
+    
+    if (propertyError || !property) {
+      throw new Error(`Property not found: ${propertyError?.message || "Property does not exist"}`);
+    }
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+    console.log("💳 Initializing Stripe...");
+    const stripe = new Stripe(stripeSecretKey, {
       apiVersion: "2023-10-16",
     });
 
     // Check if customer exists
+    console.log("👥 Checking for existing Stripe customer...");
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
+      console.log("👥 Found existing customer:", customerId);
+    } else {
+      console.log("👥 No existing customer found");
     }
 
     // Create checkout session for monthly rent subscription
+    console.log("🛒 Creating checkout session...");
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -74,12 +127,24 @@ serve(async (req) => {
       },
     });
 
+    console.log("✅ Checkout session created successfully:", {
+      sessionId: session.id,
+      url: session.url ? "✅ Present" : "❌ Missing"
+    });
+
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("❌ Error in create-rent-checkout:", errorMessage);
+    console.error("❌ Full error:", error);
+    
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      details: "Check function logs for more information"
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
