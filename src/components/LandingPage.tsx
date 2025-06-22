@@ -1,19 +1,13 @@
 
-import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Home, Users, Shield, MessageCircle } from "lucide-react";
-import AuthModal from "@/components/auth/AuthModal";
-import StudyNestApp from "@/components/StudyNestApp";
+import { Home, Users, Shield } from "lucide-react";
 
-const Index = () => {
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [showDemoApp, setShowDemoApp] = useState(false);
+interface LandingPageProps {
+  onShowAuth: () => void;
+}
 
-  if (showDemoApp) {
-    return <StudyNestApp />;
-  }
-
+const LandingPage = ({ onShowAuth }: LandingPageProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
       {/* Header */}
@@ -23,21 +17,12 @@ const Index = () => {
             <Home className="h-8 w-8 text-blue-600" />
             <span className="text-2xl font-bold text-gray-900">StudyNest</span>
           </div>
-          <div className="flex gap-3">
-            <Button 
-              onClick={() => setShowDemoApp(true)}
-              variant="outline"
-              className="border-blue-600 text-blue-600 hover:bg-blue-50"
-            >
-              Try Demo
-            </Button>
-            <Button 
-              onClick={() => setShowAuthModal(true)}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              Sign In
-            </Button>
-          </div>
+          <Button 
+            onClick={onShowAuth}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            Sign In
+          </Button>
         </nav>
       </header>
 
@@ -51,23 +36,13 @@ const Index = () => {
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
             Connect with trusted property owners and discover affordable, comfortable accommodation designed for students.
           </p>
-          <div className="flex gap-4 justify-center">
-            <Button 
-              size="lg" 
-              onClick={() => setShowDemoApp(true)}
-              variant="outline"
-              className="text-lg px-8 py-3 border-blue-600 text-blue-600 hover:bg-blue-50"
-            >
-              Try Demo
-            </Button>
-            <Button 
-              size="lg" 
-              onClick={() => setShowAuthModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-3"
-            >
-              Get Started
-            </Button>
-          </div>
+          <Button 
+            size="lg" 
+            onClick={onShowAuth}
+            className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-3"
+          >
+            Get Started
+          </Button>
         </div>
 
         {/* Features */}
@@ -121,28 +96,17 @@ const Index = () => {
           <p className="text-xl mb-8 opacity-90">
             Join thousands of students who have found their perfect accommodation through StudyNest.
           </p>
-          <div className="flex gap-4 justify-center">
-            <Button 
-              size="lg" 
-              onClick={() => setShowDemoApp(true)}
-              className="bg-white/20 text-white hover:bg-white/30 text-lg px-8 py-3 border border-white/30"
-            >
-              Try Demo
-            </Button>
-            <Button 
-              size="lg" 
-              onClick={() => setShowAuthModal(true)}
-              className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3"
-            >
-              Sign Up Now
-            </Button>
-          </div>
+          <Button 
+            size="lg" 
+            onClick={onShowAuth}
+            className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3"
+          >
+            Sign Up Now
+          </Button>
         </div>
       </main>
-
-      <AuthModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </div>
   );
 };
 
-export default Index;
+export default LandingPage;

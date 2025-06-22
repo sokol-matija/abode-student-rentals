@@ -7,9 +7,10 @@ import ProfileSetup from './auth/ProfileSetup';
 import StudentDashboard from './dashboard/StudentDashboard';
 import PropertyOwnerDashboard from './dashboard/PropertyOwnerDashboard';
 import AuthModal from './auth/AuthModal';
+import LandingPage from './LandingPage';
 import type { Profile } from '@/types/database';
 
-type AppState = 'loading' | 'auth' | 'role-selection' | 'profile-setup' | 'dashboard';
+type AppState = 'loading' | 'landing' | 'role-selection' | 'profile-setup' | 'dashboard';
 type UserRole = 'student' | 'property_owner';
 
 const StudyNestApp = () => {
@@ -22,11 +23,12 @@ const StudyNestApp = () => {
     checkUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state change:', event, session?.user?.id);
       if (event === 'SIGNED_IN') {
         checkUser();
       } else if (event === 'SIGNED_OUT') {
         setUserProfile(null);
-        setAppState('auth');
+        setAppState('landing');
       }
     });
 
@@ -35,24 +37,27 @@ const StudyNestApp = () => {
 
   const checkUser = async () => {
     try {
+      console.log('Checking user authentication...');
       const user = await getCurrentUser();
       if (!user) {
-        setAppState('auth');
+        console.log('No authenticated user found');
+        setAppState('landing');
         return;
       }
 
+      console.log('User found:', user.id);
       try {
         const profile = await getProfile(user.id);
+        console.log('Profile found:', profile);
         setUserProfile(profile);
         setAppState('dashboard');
       } catch (error) {
-        // Profile doesn't exist, need to create one
         console.log('Profile not found, showing role selection');
         setAppState('role-selection');
       }
     } catch (error) {
       console.error('Error checking user:', error);
-      setAppState('auth');
+      setAppState('landing');
     }
   };
 
@@ -93,21 +98,12 @@ const StudyNestApp = () => {
     );
   }
 
-  if (appState === 'auth') {
+  if (appState === 'landing') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Welcome to StudyNest</h1>
-          <p className="text-gray-600 mb-8">Please sign in to continue</p>
-          <button
-            onClick={() => setShowAuthModal(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium"
-          >
-            Sign In
-          </button>
-        </div>
+      <>
+        <LandingPage onShowAuth={() => setShowAuthModal(true)} />
         <AuthModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
-      </div>
+      </>
     );
   }
 
