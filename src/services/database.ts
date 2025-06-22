@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Profile, Property } from "@/types/database";
 
 // Profile Services
-export const createProfile = async (profileData: Omit<Profile, 'id' | 'created_at' | 'updated_at'>) => {
+export const createProfile = async (profileData: { id: string; full_name: string; phone: string; role: 'student' | 'property_owner' }) => {
   const { data, error } = await supabase
     .from('profiles')
     .insert([profileData])
