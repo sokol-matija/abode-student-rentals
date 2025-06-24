@@ -5,7 +5,6 @@ A modern web application for connecting students with rental properties, featuri
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/dac345e1-8fd2-422e-b254-40beb05a9d49
 
 ## Features
 
@@ -160,13 +159,6 @@ A modern web application for connecting students with rental properties, featuri
 
 ## How to Edit This Code
 
-### Using Lovable (Recommended)
-Simply visit the [Lovable Project](https://lovable.dev/projects/dac345e1-8fd2-422e-b254-40beb05a9d49) and start prompting for changes.
-
-### Using Your Preferred IDE
-1. Make changes locally
-2. Push to GitHub - changes will automatically sync with Lovable
-
 ### Using GitHub Codespaces
 1. Navigate to your repository
 2. Click "Code" → "Codespaces" → "New codespace"
@@ -186,14 +178,6 @@ The application uses the following main tables:
 ### Lovable Platform (Recommended)
 1. Open your [Lovable Project](https://lovable.dev/projects/dac345e1-8fd2-422e-b254-40beb05a9d49)
 2. Click "Share" → "Publish"
-
-### Custom Domain
-To connect a custom domain:
-1. Navigate to Project → Settings → Domains in Lovable
-2. Click "Connect Domain"
-3. Follow the setup instructions
-
-Note: A paid Lovable plan is required for custom domains.
 
 ## Environment Variables for Production
 
@@ -217,10 +201,3 @@ For payment functionality, ensure these secrets are configured in your Supabase 
 3. Make your changes
 4. Test thoroughly using `npm run test`
 5. Submit a pull request
-
-## Support
-
-- [Lovable Documentation](https://docs.lovable.dev/)
-- [Lovable Discord Community](https://discord.com/channels/1119885301872070706/1280461670979993613)
-- [Supabase Documentation](https://supabase.com/docs)
-- [Stripe Documentation](https://stripe.com/docs)
