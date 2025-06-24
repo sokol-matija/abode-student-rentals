@@ -173,12 +173,6 @@ The application uses the following main tables:
 - `inquiry_messages` - Messages between students and property owners
 - `rent_payments` - Stripe subscription tracking for rent payments
 
-## Deployment
-
-### Lovable Platform (Recommended)
-1. Open your [Lovable Project](https://lovable.dev/projects/dac345e1-8fd2-422e-b254-40beb05a9d49)
-2. Click "Share" → "Publish"
-
 ## Environment Variables for Production
 
 When deploying to other platforms (Vercel, Netlify, etc.), set these environment variables:
