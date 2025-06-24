@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -115,7 +114,7 @@ const StudentDashboard = ({ profile }: StudentDashboardProps) => {
           </TabsContent>
 
           <TabsContent value="inquiries">
-            <InquiryList currentUserId={profile.id} userRole={profile.role} />
+            <InquiryList profile={profile} />
           </TabsContent>
 
           <TabsContent value="payments">
