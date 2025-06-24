@@ -57,4 +57,8 @@ export interface RentPayment {
   current_period_end: string;
   created_at: string;
   updated_at: string;
+  properties?: {
+    title: string;
+    location: string;
+  };
 }

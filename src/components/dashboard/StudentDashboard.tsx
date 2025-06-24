@@ -16,8 +16,6 @@ interface StudentDashboardProps {
 }
 
 const StudentDashboard = ({ profile }: StudentDashboardProps) => {
-  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-
   const { data: properties = [], isLoading: propertiesLoading } = useQuery({
     queryKey: ['properties'],
     queryFn: () => getProperties(),
@@ -110,7 +108,6 @@ const StudentDashboard = ({ profile }: StudentDashboardProps) => {
                     key={property.id}
                     property={property}
                     currentUserId={profile.id}
-                    onSelect={setSelectedProperty}
                   />
                 ))}
               </div>
@@ -118,7 +115,7 @@ const StudentDashboard = ({ profile }: StudentDashboardProps) => {
           </TabsContent>
 
           <TabsContent value="inquiries">
-            <InquiryList userId={profile.id} userRole={profile.role} />
+            <InquiryList currentUserId={profile.id} userRole={profile.role} />
           </TabsContent>
 
           <TabsContent value="payments">
