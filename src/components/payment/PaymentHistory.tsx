@@ -31,7 +31,24 @@ const PaymentHistory = ({ currentUserId }: PaymentHistoryProps) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setPayments(data || []);
+      
+      // Map the data to ensure proper type alignment
+      const mappedPayments: RentPayment[] = (data || []).map(payment => ({
+        id: payment.id,
+        property_id: payment.property_id,
+        tenant_id: payment.tenant_id,
+        stripe_customer_id: payment.stripe_customer_id,
+        stripe_subscription_id: payment.stripe_subscription_id,
+        monthly_rent: payment.monthly_rent,
+        status: payment.status as 'active' | 'cancelled' | 'past_due',
+        current_period_start: payment.current_period_start,
+        current_period_end: payment.current_period_end,
+        created_at: payment.created_at,
+        updated_at: payment.updated_at,
+        properties: payment.properties
+      }));
+      
+      setPayments(mappedPayments);
     } catch (error) {
       console.error('Error fetching payments:', error);
       toast({
@@ -151,8 +168,8 @@ const PaymentHistory = ({ currentUserId }: PaymentHistoryProps) => {
             <div key={payment.id} className="border rounded-lg p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-semibold">{(payment as any).properties?.title}</h3>
-                  <p className="text-sm text-gray-600">{(payment as any).properties?.location}</p>
+                  <h3 className="font-semibold">{payment.properties?.title}</h3>
+                  <p className="text-sm text-gray-600">{payment.properties?.location}</p>
                 </div>
                 <Badge className={getStatusColor(payment.status)}>
                   {payment.status.toUpperCase()}
