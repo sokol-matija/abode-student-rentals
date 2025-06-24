@@ -18,11 +18,90 @@ A modern web application for connecting students with rental properties, featuri
 
 ## Tech Stack
 
-- **Frontend**: React 18, TypeScript, Tailwind CSS, shadcn/ui
-- **Backend**: Supabase (Database, Auth, Real-time)
-- **Payments**: Stripe (Subscriptions, Webhooks)
-- **Build Tool**: Vite
-- **Deployment**: Lovable Platform
+### Frontend Technologies
+
+**Core Framework & Build Tools:**
+- **React 18** - Modern React with hooks and concurrent features
+- **TypeScript** - Type-safe JavaScript for better development experience
+- **Vite** - Fast build tool and development server
+- **React Router DOM** - Client-side routing for navigation
+
+**UI & Styling:**
+- **Tailwind CSS** - Utility-first CSS framework for styling
+- **shadcn/ui** - High-quality React component library built on Radix UI
+- **Radix UI** - Unstyled, accessible UI primitives (dialogs, dropdowns, etc.)
+- **Lucide React** - Beautiful icon library
+- **class-variance-authority** & **clsx** - Utility libraries for conditional CSS classes
+
+**State Management & Data Fetching:**
+- **TanStack React Query** - Server state management and caching
+- **React Hook Form** - Form handling with validation
+- **Zod** - Schema validation for forms and data
+
+**Charts & Visualization:**
+- **Recharts** - React charting library for data visualization
+
+### Backend & Database
+
+**Backend as a Service:**
+- **Supabase** - Complete backend solution providing:
+  - PostgreSQL database
+  - Real-time subscriptions
+  - Authentication (Google OAuth, email/password)
+  - Row Level Security (RLS)
+  - Edge Functions (serverless functions)
+  - File storage capabilities
+
+**Database Schema:**
+- **profiles** - User profile information
+- **properties** - Property listings with amenities and details
+- **inquiries** - Student inquiries about properties
+- **inquiry_messages** - Messaging between students and property owners
+- **rent_payments** - Stripe payment tracking and subscriptions
+
+### Payment Processing
+
+**Stripe Integration:**
+- **Stripe Checkout** - Secure payment processing
+- **Stripe Subscriptions** - Monthly rent payment management
+- **Stripe Customer Portal** - Subscription management for users
+- **Stripe Webhooks** - Real-time payment status updates
+
+### Authentication & Security
+
+**User Authentication:**
+- **Supabase Auth** - Built-in authentication system
+- **Google OAuth** - Social login integration
+- **Row Level Security** - Database-level security policies
+- **JWT tokens** - Secure session management
+
+### Testing
+
+**Testing Framework:**
+- **Vitest** - Fast unit testing framework
+- **React Testing Library** - Component testing utilities
+- **jsdom** - DOM simulation for testing
+- **@testing-library/jest-dom** - Custom Jest matchers
+
+### Development Tools
+
+**Code Quality:**
+- **ESLint** - Code linting and formatting
+- **TypeScript strict mode** - Enhanced type checking
+
+**Additional Libraries:**
+- **date-fns** - Date manipulation utilities
+- **react-day-picker** - Date picker component
+- **sonner** - Toast notifications
+- **next-themes** - Theme management (dark/light mode support)
+
+## Architecture Patterns
+
+**Component Architecture:**
+- Modular component structure with focused, single-responsibility components
+- Custom hooks for business logic
+- Service layer for database operations
+- Type-safe API interactions
 
 ## Local Development Setup
 
@@ -56,6 +135,11 @@ A modern web application for connecting students with rental properties, featuri
    npm run dev
    ```
    The app will be available at `http://localhost:5173`
+
+5. **Run tests**
+   ```bash
+   npm run test
+   ```
 
 ### Localhost Considerations
 
@@ -131,7 +215,7 @@ For payment functionality, ensure these secrets are configured in your Supabase 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test thoroughly
+4. Test thoroughly using `npm run test`
 5. Submit a pull request
 
 ## Support
