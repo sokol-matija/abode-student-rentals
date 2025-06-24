@@ -80,7 +80,14 @@ serve(async (req) => {
 
     if (existingPayment) {
       console.log("🚫 Existing active subscription found:", existingPayment.id);
-      throw new Error("You already have an active subscription for this property. Use 'Manage Subscription' to modify your existing subscription.");
+      return new Response(JSON.stringify({ 
+        error: "EXISTING_SUBSCRIPTION",
+        message: "You already have an active subscription for this property. Use 'Manage Subscription' to modify your existing subscription.",
+        hasExistingSubscription: true
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 409, // Conflict status code instead of 500
+      });
     }
 
     // Get property details
@@ -132,7 +139,14 @@ serve(async (req) => {
 
       if (existingSubscription) {
         console.log("🚫 Found existing Stripe subscription with same amount:", existingSubscription.id);
-        throw new Error("You already have an active subscription with the same rent amount. Please cancel your existing subscription before creating a new one.");
+        return new Response(JSON.stringify({ 
+          error: "DUPLICATE_SUBSCRIPTION",
+          message: "You already have an active subscription with the same rent amount. Please manage your existing subscription instead of creating a new one.",
+          hasExistingSubscription: true
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 409, // Conflict status code instead of 500
+        });
       }
     } else {
       console.log("👥 No existing customer found");
@@ -183,7 +197,8 @@ serve(async (req) => {
     console.error("❌ Full error:", error);
     
     return new Response(JSON.stringify({ 
-      error: errorMessage,
+      error: "INTERNAL_ERROR",
+      message: errorMessage,
       details: "Check function logs for more information"
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

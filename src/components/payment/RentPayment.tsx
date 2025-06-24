@@ -33,7 +33,35 @@ const RentPayment = ({ property, currentUserId }: RentPaymentProps) => {
         body: { propertyId: property.id }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        
+        // Handle specific error cases
+        if (error.context?.error === 'EXISTING_SUBSCRIPTION' || error.context?.error === 'DUPLICATE_SUBSCRIPTION') {
+          toast({
+            title: "Existing Subscription Found",
+            description: "You already have an active subscription for this property. Use 'Manage Subscription' to modify it.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        throw error;
+      }
+
+      // Check if the response indicates an existing subscription
+      if (data?.hasExistingSubscription) {
+        toast({
+          title: "Existing Subscription Found",
+          description: data.message || "You already have an active subscription for this property.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!data?.url) {
+        throw new Error("No checkout URL received");
+      }
 
       // Open Stripe checkout in a new tab
       window.open(data.url, '_blank');
